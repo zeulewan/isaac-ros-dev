@@ -1,0 +1,18 @@
+# ROS 2 build artifacts
+build/
+install/
+log/
+
+# Python
+__pycache__/
+*.pyc
+
+# ROS packages (cloned from NVIDIA, not our code)
+src/
+
+# Core dumps
+core
+
+# TF frame graph dumps
+*.gv
+*.pdf
