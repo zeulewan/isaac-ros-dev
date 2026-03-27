@@ -42,16 +42,10 @@ RUN echo 'export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp' \
 # Also set for non-login shells (entrypoint scripts)
 ENV RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
 
-# Foxglove-bridge auto-start entrypoint
-COPY 50-foxglove-bridge.sh /usr/local/bin/scripts/entrypoint_additions/50-foxglove-bridge.sh
-RUN chmod +x /usr/local/bin/scripts/entrypoint_additions/50-foxglove-bridge.sh
-
-# H.264 NVENC republisher auto-start entrypoint
-COPY 60-h264-republisher.sh /usr/local/bin/scripts/entrypoint_additions/60-h264-republisher.sh
-RUN chmod +x /usr/local/bin/scripts/entrypoint_additions/60-h264-republisher.sh
-
-# Teleop twist joy auto-start entrypoint (converts Joy -> Twist on /cmd_vel)
-COPY 70-teleop-twist-joy.sh /usr/local/bin/scripts/entrypoint_additions/70-teleop-twist-joy.sh
-RUN chmod +x /usr/local/bin/scripts/entrypoint_additions/70-teleop-twist-joy.sh
+# Auto-start entrypoint scripts
+COPY entrypoint/50-foxglove-bridge.sh /usr/local/bin/scripts/entrypoint_additions/
+COPY entrypoint/60-h264-republisher.sh /usr/local/bin/scripts/entrypoint_additions/
+COPY entrypoint/70-teleop-twist-joy.sh /usr/local/bin/scripts/entrypoint_additions/
+RUN chmod +x /usr/local/bin/scripts/entrypoint_additions/*.sh
 
 WORKDIR /workspaces/isaac_ros-dev
