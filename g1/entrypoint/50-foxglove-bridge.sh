@@ -5,6 +5,7 @@
 source /opt/ros/jazzy/setup.bash
 source /opt/unitree_ros2/cyclonedds_ws/install/setup.bash
 export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+export ROS_DOMAIN_ID=1  # match Unitree DDS channel 1
 
 # Foxglove bridge (visualization on port 8765)
 ros2 launch foxglove_bridge foxglove_bridge_launch.xml port:=8765 &
