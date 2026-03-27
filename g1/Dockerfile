@@ -7,15 +7,15 @@ RUN rm -f /etc/apt/sources.list.d/yarn.list \
     && echo "deb [arch=amd64 signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu noble main" \
        > /etc/apt/sources.list.d/ros2.list
 
-# Isaac ROS GPU perception + Foxglove H.264 + ffmpeg + teleop + CycloneDDS
+# Isaac ROS GPU perception + Foxglove + CycloneDDS + Nav2
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    ros-jazzy-isaac-ros-apriltag \
     ros-jazzy-isaac-ros-visual-slam \
     ros-jazzy-isaac-ros-nvblox \
+    ros-jazzy-foxglove-bridge \
     ros-jazzy-foxglove-compressed-video-transport \
     ros-jazzy-ffmpeg-encoder-decoder \
-    ros-jazzy-teleop-twist-keyboard \
-    ros-jazzy-teleop-twist-joy \
+    ros-jazzy-navigation2 \
+    ros-jazzy-nav2-bringup \
     ros-jazzy-rmw-cyclonedds-cpp \
     ros-jazzy-rosidl-generator-dds-idl \
     ffmpeg \
@@ -39,13 +39,10 @@ RUN echo 'export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp' \
     >> /etc/profile.d/cyclonedds.sh \
     && chmod +x /etc/profile.d/cyclonedds.sh
 
-# Also set for non-login shells (entrypoint scripts)
 ENV RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
 
-# Auto-start entrypoint scripts
-COPY entrypoint/50-foxglove-bridge.sh /usr/local/bin/scripts/entrypoint_additions/
-COPY entrypoint/60-h264-republisher.sh /usr/local/bin/scripts/entrypoint_additions/
-COPY entrypoint/70-teleop-twist-joy.sh /usr/local/bin/scripts/entrypoint_additions/
+# Auto-start Foxglove bridge
+COPY entrypoint/ /usr/local/bin/scripts/entrypoint_additions/
 RUN chmod +x /usr/local/bin/scripts/entrypoint_additions/*.sh
 
 WORKDIR /workspaces/isaac_ros-dev

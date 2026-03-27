@@ -1,0 +1,19 @@
+services:
+  isaac_ros:
+    build: .
+    image: isaac-ros-carter:latest
+    container_name: isaac_ros_carter
+    runtime: nvidia
+    network_mode: host
+    ipc: host
+    privileged: true
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=all
+      - HOST_USER_UID=996
+      - HOST_USER_GID=996
+      - USERNAME=admin
+    volumes:
+      - .:/workspaces/isaac_ros-dev
+    entrypoint: /usr/local/bin/scripts/workspace-entrypoint.sh
+    command: bash -c "sleep infinity"
