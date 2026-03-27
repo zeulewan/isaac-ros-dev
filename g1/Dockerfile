@@ -7,15 +7,15 @@ RUN rm -f /etc/apt/sources.list.d/yarn.list \
     && echo "deb [arch=amd64 signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu noble main" \
        > /etc/apt/sources.list.d/ros2.list
 
-# Isaac ROS GPU perception + Foxglove + CycloneDDS + Nav2
+# Same packages as Carter, plus CycloneDDS + unitree_ros2 deps
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    ros-jazzy-isaac-ros-apriltag \
     ros-jazzy-isaac-ros-visual-slam \
     ros-jazzy-isaac-ros-nvblox \
-    ros-jazzy-foxglove-bridge \
     ros-jazzy-foxglove-compressed-video-transport \
     ros-jazzy-ffmpeg-encoder-decoder \
-    ros-jazzy-navigation2 \
-    ros-jazzy-nav2-bringup \
+    ros-jazzy-teleop-twist-keyboard \
+    ros-jazzy-teleop-twist-joy \
     ros-jazzy-rmw-cyclonedds-cpp \
     ros-jazzy-rosidl-generator-dds-idl \
     ffmpeg \
@@ -32,7 +32,7 @@ RUN cd /opt && git clone https://github.com/unitreerobotics/unitree_ros2.git \
     && cd unitree_ros2/cyclonedds_ws \
     && /bin/bash -c "source /opt/ros/jazzy/setup.bash && colcon build"
 
-# CycloneDDS as default RMW (matches Unitree robot's DDS)
+# CycloneDDS as default RMW (replaces FastDDS to match Unitree's DDS)
 RUN echo 'export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp' \
     > /etc/profile.d/cyclonedds.sh \
     && echo 'source /opt/unitree_ros2/cyclonedds_ws/install/setup.bash' \
@@ -41,7 +41,7 @@ RUN echo 'export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp' \
 
 ENV RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
 
-# Auto-start Foxglove bridge
+# Auto-start entrypoint scripts
 COPY entrypoint/ /usr/local/bin/scripts/entrypoint_additions/
 RUN chmod +x /usr/local/bin/scripts/entrypoint_additions/*.sh
 
