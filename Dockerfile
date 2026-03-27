@@ -7,7 +7,7 @@ RUN rm -f /etc/apt/sources.list.d/yarn.list \
     && echo "deb [arch=amd64 signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu noble main" \
        > /etc/apt/sources.list.d/ros2.list
 
-# Isaac ROS GPU perception + Foxglove H.264 + ffmpeg + teleop
+# Isaac ROS GPU perception + Foxglove H.264 + ffmpeg + teleop + CycloneDDS
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ros-jazzy-isaac-ros-apriltag \
     ros-jazzy-isaac-ros-visual-slam \
@@ -16,20 +16,31 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ros-jazzy-ffmpeg-encoder-decoder \
     ros-jazzy-teleop-twist-keyboard \
     ros-jazzy-teleop-twist-joy \
+    ros-jazzy-rmw-cyclonedds-cpp \
+    ros-jazzy-rosidl-generator-dds-idl \
     ffmpeg \
+    libyaml-cpp-dev \
+    git \
     && rm -rf /var/lib/apt/lists/*
 
 # Create admin user
 RUN useradd -m -s /bin/bash -G sudo admin \
     && echo "admin ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
-# FastDDS no-SHM XML (fixes host<->container DDS transport)
-COPY fastdds_no_shm.xml /etc/fastdds_no_shm.xml
+# Clone and build unitree_ros2 message definitions (G1 uses unitree_hg)
+RUN cd /opt && git clone https://github.com/unitreerobotics/unitree_ros2.git \
+    && cd unitree_ros2/cyclonedds_ws \
+    && /bin/bash -c "source /opt/ros/jazzy/setup.bash && colcon build"
 
-# Persistent env var for FastDDS fix (login shells)
-RUN echo 'export FASTRTPS_DEFAULT_PROFILES_FILE=/etc/fastdds_no_shm.xml' \
-    > /etc/profile.d/fastdds-fix.sh \
-    && chmod +x /etc/profile.d/fastdds-fix.sh
+# CycloneDDS as default RMW (matches Unitree robot's DDS)
+RUN echo 'export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp' \
+    > /etc/profile.d/cyclonedds.sh \
+    && echo 'source /opt/unitree_ros2/cyclonedds_ws/install/setup.bash' \
+    >> /etc/profile.d/cyclonedds.sh \
+    && chmod +x /etc/profile.d/cyclonedds.sh
+
+# Also set for non-login shells (entrypoint scripts)
+ENV RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
 
 # Foxglove-bridge auto-start entrypoint
 COPY 50-foxglove-bridge.sh /usr/local/bin/scripts/entrypoint_additions/50-foxglove-bridge.sh
@@ -39,7 +50,7 @@ RUN chmod +x /usr/local/bin/scripts/entrypoint_additions/50-foxglove-bridge.sh
 COPY 60-h264-republisher.sh /usr/local/bin/scripts/entrypoint_additions/60-h264-republisher.sh
 RUN chmod +x /usr/local/bin/scripts/entrypoint_additions/60-h264-republisher.sh
 
-# Teleop twist joy auto-start entrypoint (converts Joy → Twist on /cmd_vel)
+# Teleop twist joy auto-start entrypoint (converts Joy -> Twist on /cmd_vel)
 COPY 70-teleop-twist-joy.sh /usr/local/bin/scripts/entrypoint_additions/70-teleop-twist-joy.sh
 RUN chmod +x /usr/local/bin/scripts/entrypoint_additions/70-teleop-twist-joy.sh
 
